@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    background: #000;
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem;
+    color: #fff;
+    padding: 20px;
+    margin: 0;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  #loadingOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    z-index: 9999;
+  }
+
+  .portrait {
+    width: 20vh;
+    height: 20vh;
+    border: 2px solid #fff;
+    background: #000;
+    display: inline-block;
+    image-rendering: pixelated;
+    overflow: hidden;
+    margin-top: 2vh;
+    position: relative;
+  }
+
+  .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .portrait img.hidden {
+    display: none;
+  }
+
+  #typewriter {
+    white-space: pre-wrap;
+    word-break: break-word;
+    display: none;
+  }
+
+  .hidden { display: none; }
+  #blogs { display: none; }
+  #blogs a { color: red; }
+</style>
+</head>
+<body>
+
+<h2>About Me</h2>
+<div id="loadingOverlay">Loading...</div>
+
+<div id="mainContent" class="hidden">
+  <div class="portrait">
+    <img src="https://s12.gifyu.com/images/b3WJz.gif" alt="Tanim" id="normalImg">
+    <img src="https://s12.gifyu.com/images/b3WGP.gif" alt="Tanim Talking" id="talkingImg" class="hidden">
+  </div>
+
+  <div id="typewriter">
+I'm Shaikh Tanim Mahfuz — 18 years old, studying at MM City College, and a proud Ex-Joshepian from Khulna. Dreaming to get into IBA-DU.
+My buddies are music, web design, chess, psychology, fiction, and basically — everything! xD
+This is my personal website and part of project-based learning. Thanks for visiting!
+  </div>
+
+  <p id="blogs">To know me further more, read my <a href="blogs.html">blogs</a></p>
+</div>
+
+<script>
+const normalImg = document.getElementById("normalImg");
+const talkingImg = document.getElementById("talkingImg");
+const mainContent = document.getElementById("mainContent");
+const loadingOverlay = document.getElementById("loadingOverlay");
+const container = document.getElementById("typewriter");
+
+const imageURLs = [
+  "https://s12.gifyu.com/images/b3WJz.gif",
+  "https://s12.gifyu.com/images/b3WGP.gif"
+];
+
+let imagesLoaded = 0;
+
+function checkReady() {
+  if (imagesLoaded === imageURLs.length) {
+    loadingOverlay.remove();
+    mainContent.classList.remove("hidden");
+    document.body.style.overflow = "auto";
+    startTypewriterWithAudio();
+  }
+}
+
+imageURLs.forEach(url => {
+  const img = new Image();
+  img.src = url;
+  img.onload = img.onerror = () => {
+    imagesLoaded++;
+    checkReady();
+  };
+});
+
+function startTypewriterWithAudio() {
+  container.style.display = "block";
+  
+  // Switch to talking GIF instantly
+  normalImg.classList.add("hidden");
+  talkingImg.classList.remove("hidden");
+
+  const text = container.textContent.trim();
+  const totalChars = text.length;
+  container.innerHTML = "";
+
+  // --- Web Audio API ---
+  const context = new (window.AudioContext || window.webkitAudioContext)();
+  fetch('voice.m4a') // your audio file
+    .then(r => r.arrayBuffer())
+    .then(buf => context.decodeAudioData(buf))
+    .then(decoded => {
+      const source = context.createBufferSource();
+      source.buffer = decoded;
+      source.connect(context.destination);
+
+      // calculate typing speed to match audio
+      const typewriterDuration = totalChars * 50 / 1000; // 50ms per char
+      source.playbackRate.value = decoded.duration / typewriterDuration;
+      source.start(0);
+
+      // start typing
+      let i = 0;
+      function typeChar() {
+        if (i < text.length) {
+          container.textContent += text[i];
+          i++;
+          setTimeout(typeChar, 50);
+        } else {
+          // Switch back to normal GIF instantly
+          talkingImg.classList.add("hidden");
+          normalImg.classList.remove("hidden");
+          document.getElementById("blogs").style.display = "block";
+        }
+      }
+      typeChar();
+    })
+    .catch(err => {
+      console.error("Audio failed:", err);
+      // fallback typewriter
+      let i = 0;
+      function typeChar() {
+        if (i < text.length) {
+          container.textContent += text[i];
+          i++;
+          setTimeout(typeChar, 50);
+        } else {
+          // Switch back to normal GIF instantly
+          talkingImg.classList.add("hidden");
+          normalImg.classList.remove("hidden");
+          document.getElementById("blogs").style.display = "block";
+        }
+      }
+      typeChar();
+    });
+}
+</script>
+
+</body>
+</html>

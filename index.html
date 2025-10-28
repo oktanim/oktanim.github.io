@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    background: #000;
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem;
+    color: #fff;
+    padding: 20px;
+    margin: 0;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  #loadingOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    z-index: 9999;
+  }
+
+  .portrait {
+    width: 20vh;
+    height: 20vh;
+    border: 2px solid #fff;
+    background: #000;
+    display: inline-block;
+    image-rendering: pixelated;
+    overflow: hidden;
+    margin-top: 30vh;
+    position: relative;
+  }
+
+  .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .portrait img.hidden {
+    display: none;
+  }
+
+  #typewriter {
+    white-space: pre-wrap;
+    word-break: break-word;
+    display: none;
+  }
+
+  a {
+    color: #ff4d4d;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  #startBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+
+  #startBtn img {
+    width: 80px;
+    height: 80px;
+    image-rendering: pixelated;
+    border: 2px solid #fff;
+    border-radius: 4px;
+    transition: transform 0.2s ease;
+  }
+
+  #startBtn:hover img {
+    transform: scale(1.1);
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loadingOverlay">Loading...</div>
+
+<!-- Audio element -->
+<audio id="voiceAudio" src="voice.m4a"></audio>
+
+<div id="mainContent" class="hidden">
+  <div class="portrait">
+    <img src="https://s12.gifyu.com/images/b3WJz.gif" alt="Tanim" id="normalImg">
+    <img src="https://s12.gifyu.com/images/b3WGP.gif" alt="Tanim Talking" id="talkingImg" class="hidden">
+  </div>
+
+  <div>
+    <button id="startBtn">
+      <img src="https://i.ibb.co.com/23wbrDDg/ezgif-2f60143796baaf.gif" alt="Start">
+    </button>
+  </div>
+
+  <div id="typewriter">
+    *Hi, I'm Tanim.
+    <br />
+    *Would you like to know About Me or read my Blogs?
+  </div>
+</div>
+
+<script>
+const container = document.getElementById("typewriter");
+const startBtn = document.getElementById("startBtn");
+const normalImg = document.getElementById("normalImg");
+const talkingImg = document.getElementById("talkingImg");
+const loadingOverlay = document.getElementById("loadingOverlay");
+const mainContent = document.getElementById("mainContent");
+const audio = document.getElementById("voiceAudio");
+
+const imageURLs = [
+  "https://s12.gifyu.com/images/b3WJz.gif",
+  "https://s12.gifyu.com/images/b3WGP.gif",
+  "https://i.ibb.co.com/23wbrDDg/ezgif-2f60143796baaf.gif"
+];
+
+let imagesLoaded = 0;
+let audioReady = false;
+
+function checkReady() {
+  if (imagesLoaded === imageURLs.length && audioReady) {
+    loadingOverlay.remove();
+    mainContent.classList.remove("hidden");
+    document.body.style.overflow = "auto";
+  }
+}
+
+imageURLs.forEach(url => {
+  const img = new Image();
+  img.src = url;
+  img.onload = img.onerror = () => {
+    imagesLoaded++;
+    checkReady();
+  };
+});
+
+audio.addEventListener("canplaythrough", () => {
+  audioReady = true;
+  checkReady();
+});
+
+// Prepare typewriter lines
+const lines = container.textContent.split('\n').map(l => l.trimStart());
+container.innerHTML = "";
+let currentLine = 0;
+
+function typeLine() {
+  if (currentLine >= lines.length) {
+    container.innerHTML = container.innerHTML
+      .replace(/\bAbout Me\b/, '<a href="aboutme.html">About Me</a>')
+      .replace(/\bBlogs\b/, '<a href="blogs.html">Blogs</a>');
+
+    // Switch back to normal GIF
+    talkingImg.classList.add("hidden");
+    normalImg.classList.remove("hidden");
+    
+    audio.pause();
+    audio.currentTime = 0;
+    return;
+  }
+
+  const lineEl = document.createElement("span");
+  container.appendChild(lineEl);
+  container.appendChild(document.createElement("br"));
+
+  const text = lines[currentLine];
+  let i = 0;
+
+  function typeChar() {
+    if (i < text.length) {
+      lineEl.textContent += text[i];
+      i++;
+      setTimeout(typeChar, 50);
+    } else {
+      currentLine++;
+      setTimeout(typeLine, 100);
+    }
+  }
+  typeChar();
+}
+
+startBtn.addEventListener("click", () => {
+  startBtn.remove();
+  container.style.display = "block";
+  
+  // Switch to talking GIF instantly (both already loaded)
+  normalImg.classList.add("hidden");
+  talkingImg.classList.remove("hidden");
+
+  audio.play().catch(err => {
+    console.warn("Audio playback failed:", err);
+  });
+
+  typeLine();
+});
+</script>
+
+</body>
+</html>
